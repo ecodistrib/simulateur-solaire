@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur Solaire — ECO DISTRIB</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;min-height:100vh;padding:1.5rem}
+.wrap{max-width:680px;margin:0 auto}
+.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.10)}
+.head{background:#1a2744;color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px}
+.body{padding:1.5rem}
+.ss{display:none}.ss.on{display:block}
+label.lbl{font-size:13px;color:#64748b;display:block;margin:0 0 6px}
+.fg{margin:0 0 1.25rem}
+input[type=text],input[type=number]{border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;transition:border-color .15s}
+input:focus{border-color:#1565C0}
+.og{display:grid;gap:8px;margin:0 0 1.25rem}
+.og.c5{grid-template-columns:repeat(5,1fr)}
+.og.c3{grid-template-columns:repeat(3,1fr)}
+.og.c2{grid-template-columns:repeat(2,1fr)}
+.ob{border:1.5px solid #e2e8f0;background:#fff;padding:10px 4px;border-radius:8px;cursor:pointer;text-align:center;font-size:12px;color:#334155;width:100%;transition:all .15s}
+.ob:hover{border-color:#1565C0;background:#f0f6ff}
+.ob.on{border:2.5px solid #1565C0 !important;background:#dbeafe !important;color:#1e3a8a !important;font-weight:600}
+/* Boutons OUI / NON grands */
+.ob-yn{border:2px solid #e2e8f0;background:#fff;padding:18px 12px;border-radius:12px;cursor:pointer;text-align:center;font-size:16px;font-weight:600;color:#334155;width:100%;transition:all .2s}
+.ob-yn:hover{border-color:#1565C0;background:#f0f6ff}
+.ob-yn.on{border:3px solid #1565C0 !important;background:#dbeafe !important;color:#1e3a8a !important}
+.ob-yn .yn-icon{font-size:28px;display:block;margin-bottom:6px}
+.bp{background:#C0392B;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500}
+.bp:hover{background:#a93226}
+.bs{background:#fff;color:#64748b;border:1.5px solid #e2e8f0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;margin-right:8px}
+.prg{display:flex;gap:4px;margin:0 0 1.5rem}
+.ps{height:4px;flex:1;border-radius:2px;background:#e2e8f0;transition:background .3s}
+.ps.on{background:#1565C0}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:1rem 0}
+.kc{background:#f8fafc;border-radius:10px;padding:.875rem;border:1px solid #e2e8f0}
+.kc.hl{background:#dbeafe;border-color:#93c5fd}
+.kl{font-size:12px;color:#64748b;margin:0 0 4px}
+.kc.hl .kl{color:#1e40af}
+.kv{font-size:20px;font-weight:600;color:#1e293b;margin:0}
+.kc.hl .kv{color:#1565C0}
+.ku{font-size:12px;color:#94a3b8}
+.st{font-size:15px;font-weight:600;color:#1e293b;margin:0 0 1rem}
+.ib{background:#eff6ff;color:#1e40af;padding:10px 14px;border-radius:8px;font-size:13px;margin:1rem 0;line-height:1.6;border:1px solid #bfdbfe}
+.ib-ok{background:#f0fdf4;color:#166534;padding:10px 14px;border-radius:8px;font-size:13px;margin:1rem 0;line-height:1.6;border:1px solid #bbf7d0}
+.t2b{display:none;border-top:1px solid #e2e8f0;padding-top:1rem;margin-top:.5rem}
+.t2b.on{display:block}
+.rb{display:flex;justify-content:space-between;margin-top:1rem}
+.th{background:#1a2744;color:#fff;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;margin:0 0 .875rem;display:inline-block}
+.sep{border:none;border-top:1px solid #e2e8f0;margin:1.25rem 0}
+.sect{font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:0 0 .75rem}
+/* Dimensions result card */
+.dc{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.dc-head{font-size:12px;font-weight:600;color:#1a2744;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.dc-tag{background:#1a2744;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px}
+.dc-orient{font-size:12px;color:#1565C0;font-weight:600}
+.dc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.dc-cell .dc-lbl{font-size:11px;color:#94a3b8;margin-bottom:2px}
+.dc-cell .dc-val{font-size:15px;font-weight:600;color:#1e293b}
+.dc-cell .dc-val.blue{color:#1565C0}
+.dc-cell .dc-sub{font-size:11px;color:#94a3b8}
+.dc-total{background:#e0f0ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;font-size:13px;color:#1e40af;margin-top:4px}
+.dc-note{font-size:11px;color:#94a3b8;margin-top:6px;line-height:1.5}
+/* Surface result box */
+.surf-result{background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:16px;margin:1rem 0;text-align:center}
+.surf-result .sr-nb{font-size:42px;font-weight:800;color:#16a34a;line-height:1}
+.surf-result .sr-label{font-size:14px;color:#166534;margin-top:4px}
+.surf-result .sr-detail{font-size:12px;color:#86efac;margin-top:8px;color:#4ade80}
+.surf-result .sr-detail{font-size:12px;color:#166534;margin-top:8px;opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+  <div class="head" style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:0.75rem 1.5rem;gap:18px">
+    <img src="ChatGPT Image 7 mai 2026, 09_20_22.png"
+         alt="ECODISTRIB"
+         style="height:72px;width:auto;display:block;flex-shrink:0">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:3px">Magasin familial · Solaire · Électricité · Plomberie</div>
+      <div style="font-size:11px;color:#64748b">Simulateur basé sur les données PVGIS — Commission Européenne</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- BARRE DE PROGRESSION (5 étapes) -->
+    <div class="prg">
+      <div class="ps on" id="p1"></div>
+      <div class="ps" id="p2"></div>
+      <div class="ps" id="p3"></div>
+      <div class="ps" id="p4"></div>
+      <div class="ps" id="p5"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ÉTAPE 1 — Localisation                  -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="ss on" id="step1">
+      <div class="st">Étape 1 — Informations générales</div>
+      <div class="fg">
+        <label class="lbl">Numéro de département</label>
+        <input type="text" id="dept" placeholder="Ex: 30, 13, 75, 2A..." style="width:200px" maxlength="3" oninput="deptInput()">
+        <div style="font-size:13px;color:#1565C0;margin-top:6px;min-height:20px;font-weight:500" id="dname"></div>
+      </div>
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 1.25rem">
+        <div>
+          <div style="font-size:14px;font-weight:500;color:#1e293b">Consommation annuelle</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px">Lisible sur votre facture d'électricité</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" id="conso" value="4500" min="500" max="50000" style="width:110px;text-align:right;font-weight:500">
+          <span style="font-size:13px;color:#64748b;white-space:nowrap">kWh/an</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end">
+        <button class="bp" onclick="goStep(2)">Suivant →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ÉTAPE 2 — Avancement du projet          -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="ss" id="step2">
+      <div class="st">Étape 2 — Avancement du projet</div>
+      <p style="font-size:14px;color:#475569;margin:0 0 1.25rem;line-height:1.6">
+        J'ai déjà un devis et / ou une étude technique&nbsp;:
+      </p>
+      <div class="og c2" style="margin-bottom:1.5rem">
+        <button class="ob-yn" id="btn-oui" onclick="choixDevis('oui')">
+          <span class="yn-icon">✅</span>
+          OUI
+        </button>
+        <button class="ob-yn" id="btn-non" onclick="choixDevis('non')">
+          <span class="yn-icon">📐</span>
+          NON
+        </button>
+      </div>
+      <div class="rb">
+        <button class="bs" onclick="goStep(1)">← Retour</button>
+        <button class="bp" id="btn-step2-next" onclick="validerEtape2()" style="display:none">Suivant →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ÉTAPE 3A — Config toiture (OUI)         -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="ss" id="step3a">
+      <div class="st">Étape 3 — Configuration toiture</div>
+      <span class="th">🏠 Toit 1</span>
+
+      <label class="lbl">Orientation (azimut)</label>
+      <div class="og c5" id="az1">
+        <button class="ob on" onclick="pick(this,'az1',1.00)">Sud</button>
+        <button class="ob" onclick="pick(this,'az1',0.95)">Sud-Est</button>
+        <button class="ob" onclick="pick(this,'az1',0.95)">Sud-Ouest</button>
+        <button class="ob" onclick="pick(this,'az1',0.82)">Est</button>
+        <button class="ob" onclick="pick(this,'az1',0.82)">Ouest</button>
+      </div>
+
+      <label class="lbl">Inclinaison du toit</label>
+      <div class="og c3" id="in1">
+        <button class="ob" onclick="pick(this,'in1',0.87)">Toit plat (0°)</button>
+        <button class="ob on" onclick="pick(this,'in1',0.94)">Provençal (10°)</button>
+        <button class="ob" onclick="pick(this,'in1',0.99)">Pentu (35°)</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:0 0 1rem">
+        <div>
+          <label class="lbl">Nombre de panneaux</label>
+          <input type="number" id="pan1" value="12" min="1" max="100" style="width:110px">
+        </div>
+        <div>
+          <label class="lbl">Puissance par panneau</label>
+          <div class="og c3" id="w1" style="margin:0">
+            <button class="ob" onclick="pick(this,'w1',400)">400 Wc</button>
+            <button class="ob on" onclick="pick(this,'w1',500)">500 Wc</button>
+            <button class="ob" onclick="pick(this,'w1',600)">600 Wc</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:0 0 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px">
+        <div>
+          <label class="lbl" style="color:#1565C0;font-weight:600">Pose des panneaux</label>
+          <div class="og c2" id="or1" style="margin:0">
+            <button class="ob on" onclick="pick(this,'or1','portrait')" title="Panneau debout">↕ Portrait</button>
+            <button class="ob" onclick="pick(this,'or1','landscape')" title="Panneau couché">↔ Paysage</button>
+          </div>
+        </div>
+        <div>
+          <label class="lbl" style="color:#1565C0;font-weight:600">Panneaux par rangée</label>
+          <input type="number" id="ppr1" value="4" min="1" max="20" style="width:90px">
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px">ex : 4 pan. → 3 rangées pour 12</div>
+        </div>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin:0 0 .5rem;color:#334155">
+        <input type="checkbox" id="t2tog" onchange="document.getElementById('t2b').classList.toggle('on',this.checked)" style="width:16px;height:16px">
+        Ajouter un 2ème toit (optionnel)
+      </label>
+
+      <div class="t2b" id="t2b">
+        <span class="th" style="margin-top:.75rem">🏠 Toit 2</span>
+        <label class="lbl">Orientation (azimut)</label>
+        <div class="og c5" id="az2">
+          <button class="ob on" onclick="pick(this,'az2',1.00)">Sud</button>
+          <button class="ob" onclick="pick(this,'az2',0.95)">Sud-Est</button>
+          <button class="ob" onclick="pick(this,'az2',0.95)">Sud-Ouest</button>
+          <button class="ob" onclick="pick(this,'az2',0.82)">Est</button>
+          <button class="ob" onclick="pick(this,'az2',0.82)">Ouest</button>
+        </div>
+        <label class="lbl">Inclinaison du toit</label>
+        <div class="og c3" id="in2">
+          <button class="ob" onclick="pick(this,'in2',0.87)">Toit plat (0°)</button>
+          <button class="ob on" onclick="pick(this,'in2',0.94)">Provençal (10°)</button>
+          <button class="ob" onclick="pick(this,'in2',0.99)">Pentu (35°)</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:0 0 1rem">
+          <div>
+            <label class="lbl">Nombre de panneaux</label>
+            <input type="number" id="pan2" value="6" min="1" max="100" style="width:110px">
+          </div>
+          <div>
+            <label class="lbl">Puissance par panneau</label>
+            <div class="og c3" id="w2" style="margin:0">
+              <button class="ob" onclick="pick(this,'w2',400)">400 Wc</button>
+              <button class="ob on" onclick="pick(this,'w2',500)">500 Wc</button>
+              <button class="ob" onclick="pick(this,'w2',600)">600 Wc</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:0 0 .5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px">
+          <div>
+            <label class="lbl" style="color:#1565C0;font-weight:600">Pose des panneaux</label>
+            <div class="og c2" id="or2" style="margin:0">
+              <button class="ob on" onclick="pick(this,'or2','portrait')">↕ Portrait</button>
+              <button class="ob" onclick="pick(this,'or2','landscape')">↔ Paysage</button>
+            </div>
+          </div>
+          <div>
+            <label class="lbl" style="color:#1565C0;font-weight:600">Panneaux par rangée</label>
+            <input type="number" id="ppr2" value="3" min="1" max="20" style="width:90px">
+            <div style="font-size:11px;color:#94a3b8;margin-top:4px">ex : 3 pan. → 2 rangées pour 6</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rb">
+        <button class="bs" onclick="goStep(2)">← Retour</button>
+        <button class="bp" onclick="goStep(4)">Suivant →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ÉTAPE 3B — Surface du toit (NON)        -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="ss" id="step3b">
+      <div class="st">Étape 3 — Surface disponible du toit</div>
+
+      <div class="ib">
+        Saisissez les dimensions de votre toiture. La surface sera calculée automatiquement avec une <strong>réserve de 30%</strong> (bords, passages, sécurité incendie).
+      </div>
+
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:16px;margin:1rem 0">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+          <div>
+            <label class="lbl" style="font-size:13px;color:#1e293b;font-weight:500">Longueur du toit</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" id="surf-long" value="6" min="1" max="100" step="0.5"
+                style="width:90px;font-size:18px;font-weight:600;text-align:center"
+                oninput="calcSurface()">
+              <span style="font-size:15px;color:#64748b;font-weight:500">m</span>
+            </div>
+          </div>
+          <div>
+            <label class="lbl" style="font-size:13px;color:#1e293b;font-weight:500">Hauteur (rampant)</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" id="surf-haut" value="5" min="1" max="50" step="0.5"
+                style="width:90px;font-size:18px;font-weight:600;text-align:center"
+                oninput="calcSurface()">
+              <span style="font-size:15px;color:#64748b;font-weight:500">m</span>
+            </div>
+          </div>
+        </div>
+        <div id="surf-totale" style="margin-top:12px;font-size:13px;color:#1565C0;font-weight:600;min-height:20px"></div>
+      </div>
+
+      <label class="lbl" style="margin-top:.5rem">Orientation (azimut)</label>
+      <div class="og c5" id="az_non">
+        <button class="ob on" onclick="pick(this,'az_non',1.00)">Sud</button>
+        <button class="ob" onclick="pick(this,'az_non',0.95)">Sud-Est</button>
+        <button class="ob" onclick="pick(this,'az_non',0.95)">Sud-Ouest</button>
+        <button class="ob" onclick="pick(this,'az_non',0.82)">Est</button>
+        <button class="ob" onclick="pick(this,'az_non',0.82)">Ouest</button>
+      </div>
+
+      <label class="lbl">Inclinaison du toit</label>
+      <div class="og c3" id="in_non">
+        <button class="ob" onclick="pick(this,'in_non',0.87)">Toit plat (0°)</button>
+        <button class="ob on" onclick="pick(this,'in_non',0.94)">Provençal (10°)</button>
+        <button class="ob" onclick="pick(this,'in_non',0.99)">Pentu (35°)</button>
+      </div>
+
+      <!-- Résultat du calcul auto -->
+      <div id="surf-calc" style="display:none">
+        <div class="surf-result">
+          <div class="sr-nb" id="sr-nb-pan">—</div>
+          <div class="sr-label">panneaux de 500 Wc en portrait</div>
+          <div class="sr-detail" id="sr-detail">—</div>
+        </div>
+        <div class="ib-ok" id="sr-kwc-info">—</div>
+      </div>
+
+      <div class="rb">
+        <button class="bs" onclick="goStep(2)">← Retour</button>
+        <button class="bp" onclick="validerSurface()">Suivant →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ÉTAPE 4 — Paramètres économiques        -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="ss" id="step4">
+      <div class="st">Étape 4 — Paramètres économiques</div>
+      <div style="display:grid;gap:12px;margin:0 0 1.25rem">
+
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:14px;font-weight:500;color:#1e293b">Prix du kWh</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px">Tarif EDF réglementé 2025 : 0,25 €/kWh</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" id="pkwh" value="0.25" step="0.01" min="0.10" max="0.50" style="width:90px;text-align:right;font-weight:500">
+            <span style="font-size:13px;color:#64748b">€</span>
+          </div>
+        </div>
+
+        <!-- Prix installation : visible seulement si OUI -->
+        <div id="row-pinstall" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:14px;font-weight:500;color:#1e293b">Prix de l'installation</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px">Votre devis ou budget estimé</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" id="pinstall" value="9000" min="1000" max="100000" style="width:110px;text-align:right;font-weight:500">
+            <span style="font-size:13px;color:#64748b">€</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="rb">
+        <button class="bs" id="btn-step4-back" onclick="retourStep4()">← Retour</button>
+        <button class="bp" onclick="calculate()">☀️ Calculer ma production</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- ÉTAPE 5 — Résultats                     -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="ss" id="step5">
+      <div id="results" style="display:none">
+
+        <div class="st">Vos résultats de production</div>
+        <div class="kg">
+          <div class="kc"><div class="kl">Production annuelle</div><div class="kv" id="r-prod">—</div><div class="ku">kWh/an</div></div>
+          <div class="kc"><div class="kl">Puissance totale</div><div class="kv" id="r-kwc">—</div><div class="ku">kWc</div></div>
+          <div class="kc"><div class="kl">Autoconsommation</div><div class="kv" style="color:#16a34a">60%</div><div class="ku">sans batterie</div></div>
+          <div class="kc"><div class="kl">CO₂ évité/an</div><div class="kv" id="r-co2" style="color:#16a34a">—</div><div class="ku">kg/an</div></div>
+        </div>
+
+        <hr class="sep">
+        <div class="sect">Dimensions du champ solaire</div>
+        <div id="dims-r"></div>
+
+        <hr class="sep">
+        <div class="sect">Analyse financière</div>
+        <div class="kg">
+          <div class="kc"><div class="kl">Économies année 1</div><div class="kv" id="r-eco" style="color:#1565C0">—</div><div class="ku">€/an</div></div>
+          <div class="kc" id="r-roi-card"><div class="kl">Retour invest. réel</div><div class="kv" id="r-roi" style="color:#1565C0">—</div><div class="ku">ans</div></div>
+          <div class="kc hl"><div class="kl">Économies sur 20 ans</div><div class="kv" id="r-eco20">—</div><div class="ku">avec +2%/an énergie</div></div>
+          <div class="kc hl" id="r-gain20-card"><div class="kl">Gain net sur 20 ans</div><div class="kv" id="r-gain20">—</div><div class="ku">après invest. déduit</div></div>
+        </div>
+        <div id="r-note-non" style="display:none" class="ib" style="margin-top:.5rem">
+          💡 Pour obtenir le retour sur investissement, demandez un devis — nous calculerons l'amortissement précis de votre installation.
+        </div>
+
+        <div style="font-size:13px;font-weight:600;color:#1e293b;margin:1.5rem 0 .75rem">Production mensuelle estimée (kWh)</div>
+        <div style="position:relative;width:100%;height:220px"><canvas id="prodChart"></canvas></div>
+
+        <div class="ib" style="margin-top:1.5rem">
+          Estimation basée sur les données de référence PVGIS par département. Résultats indicatifs.<br><br>
+          <strong>Le calcul financier intègre une hausse du prix de l'électricité de 2%/an.</strong> Autoconsommation fixée à 60% sans batterie.
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+          <button class="bs" onclick="reset()">🔄 Nouvelle simulation</button>
+          <button class="bp" onclick="window.open('https://www.ecodistrib.fr','_blank')">Demander un devis kit →</button>
+        </div>
+
+        <div style="text-align:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8">
+          Simulateur ECO DISTRIB · Données PVGIS — Commission Européenne · Saint-Paul-lès-Fonts (30)
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+// ─── ÉTAT GLOBAL ────────────────────────────────────────
+var S={az1:1.00,in1:0.94,w1:500,or1:'portrait',az2:1.00,in2:0.94,w2:500,or2:'portrait',az_non:1.00,in_non:0.94};
+var modeDevis=null; // 'oui' ou 'non'
+var panneauxAuto=0; // nb panneaux calculés depuis surface (mode NON)
+var pprAuto=0;      // panneaux par rangée (mode NON)
+var rowsAuto=0;     // nombre de rangées (mode NON)
+
+// Dimensions standard par puissance (mm)
+var PDIM={
+  400:{h:1722,w:1134},
+  500:{h:2094,w:1038},
+  600:{h:2278,w:1134}
+};
+
+// ─── DONNÉES PVGIS ──────────────────────────────────────
+var BASE={'01':1180,'02':1040,'03':1180,'04':1420,'05':1380,'06':1480,'07':1300,'08':1020,'09':1260,'10':1080,'11':1360,'12':1280,'13':1450,'14':980,'15':1180,'16':1220,'17':1240,'18':1160,'19':1160,'21':1160,'22':1000,'23':1140,'24':1220,'25':1120,'26':1280,'27':1020,'28':1100,'29':960,'2A':1500,'2B':1460,'30':1400,'31':1280,'32':1280,'33':1240,'34':1380,'35':1020,'36':1160,'37':1160,'38':1200,'39':1160,'40':1240,'41':1140,'42':1180,'43':1200,'44':1160,'45':1140,'46':1260,'47':1260,'48':1320,'49':1160,'50':960,'51':1060,'52':1060,'53':1100,'54':1060,'55':1060,'56':1040,'57':1060,'58':1160,'59':980,'60':1020,'61':1000,'62':960,'63':1180,'64':1200,'65':1260,'66':1420,'67':1120,'68':1160,'69':1200,'70':1140,'71':1180,'72':1120,'73':1200,'74':1180,'75':1040,'76':1000,'77':1060,'78':1040,'79':1180,'80':980,'81':1280,'82':1280,'83':1460,'84':1380,'85':1200,'86':1180,'87':1160,'88':1100,'89':1140,'90':1100,'91':1040,'92':1040,'93':1020,'94':1040,'95':1020,'971':1600,'972':1580,'973':1500,'974':1600,'976':1650};
+var DN={'01':'Ain','02':'Aisne','03':'Allier','04':'Alpes-de-Haute-Provence','05':'Hautes-Alpes','06':'Alpes-Maritimes','07':'Ardèche','08':'Ardennes','09':'Ariège','10':'Aube','11':'Aude','12':'Aveyron','13':'Bouches-du-Rhône','14':'Calvados','15':'Cantal','16':'Charente','17':'Charente-Maritime','18':'Cher','19':'Corrèze','21':'Côte-d\'Or','22':'Côtes-d\'Armor','23':'Creuse','24':'Dordogne','25':'Doubs','26':'Drôme','27':'Eure','28':'Eure-et-Loir','29':'Finistère','2A':'Corse-du-Sud','2B':'Haute-Corse','30':'Gard','31':'Haute-Garonne','32':'Gers','33':'Gironde','34':'Hérault','35':'Ille-et-Vilaine','36':'Indre','37':'Indre-et-Loire','38':'Isère','39':'Jura','40':'Landes','41':'Loir-et-Cher','42':'Loire','43':'Haute-Loire','44':'Loire-Atlantique','45':'Loiret','46':'Lot','47':'Lot-et-Garonne','48':'Lozère','49':'Maine-et-Loire','50':'Manche','51':'Marne','52':'Haute-Marne','53':'Mayenne','54':'Meurthe-et-Moselle','55':'Meuse','56':'Morbihan','57':'Moselle','58':'Nièvre','59':'Nord','60':'Oise','61':'Orne','62':'Pas-de-Calais','63':'Puy-de-Dôme','64':'Pyrénées-Atl.','65':'Hautes-Pyrénées','66':'Pyrénées-Orientales','67':'Bas-Rhin','68':'Haut-Rhin','69':'Rhône','70':'Haute-Saône','71':'Saône-et-Loire','72':'Sarthe','73':'Savoie','74':'Haute-Savoie','75':'Paris','76':'Seine-Maritime','77':'Seine-et-Marne','78':'Yvelines','79':'Deux-Sèvres','80':'Somme','81':'Tarn','82':'Tarn-et-Garonne','83':'Var','84':'Vaucluse','85':'Vendée','86':'Vienne','87':'Haute-Vienne','88':'Vosges','89':'Yonne','90':'T.-de-Belfort','91':'Essonne','92':'Hauts-de-Seine','93':'Seine-Saint-Denis','94':'Val-de-Marne','95':'Val-d\'Oise','971':'Guadeloupe','972':'Martinique','973':'Guyane','974':'La Réunion','976':'Mayotte'};
+var MF=[0.040,0.057,0.088,0.104,0.115,0.127,0.130,0.117,0.090,0.063,0.039,0.030];
+var chart=null;
+
+// ─── FONCTIONS DE BASE ──────────────────────────────────
+function getKey(){var v=document.getElementById('dept').value.trim().toUpperCase();if(BASE[v])return v;var vp=v.padStart(2,'0');if(BASE[vp])return vp;return null;}
+
+function pick(btn,grp,val){
+  document.querySelectorAll('#'+grp+' .ob').forEach(function(b){b.classList.remove('on')});
+  btn.classList.add('on');
+  S[grp]=val;
+}
+
+function deptInput(){
+  var k=getKey();
+  document.getElementById('dname').textContent=k&&DN[k]?'📍 '+DN[k]+' — Base : '+BASE[k]+' kWh/kWc/an':'';
+}
+
+function updateProg(n){
+  for(var i=1;i<=5;i++)document.getElementById('p'+i).classList.toggle('on',i<=n);
+}
+
+function goStep(n){
+  if(n===2&&!getKey()){alert('Département non reconnu.\nExemples : 30, 13, 75, 2A');return;}
+  // Masquer toutes les étapes
+  document.querySelectorAll('.ss').forEach(function(s){s.classList.remove('on')});
+  // Afficher la bonne (step3a ou step3b sont step3 dans la progression)
+  if(n==='3a'){document.getElementById('step3a').classList.add('on');updateProg(3);}
+  else if(n==='3b'){document.getElementById('step3b').classList.add('on');updateProg(3);}
+  else{document.getElementById('step'+n).classList.add('on');updateProg(n);}
+}
+
+// ─── ÉTAPE 2 : CHOIX OUI / NON ──────────────────────────
+function choixDevis(choix){
+  modeDevis=choix;
+  document.getElementById('btn-oui').classList.toggle('on', choix==='oui');
+  document.getElementById('btn-non').classList.toggle('on', choix==='non');
+  document.getElementById('btn-step2-next').style.display='inline-block';
+}
+
+function validerEtape2(){
+  if(!modeDevis){alert('Veuillez choisir OUI ou NON');return;}
+  // Afficher/masquer prix installation selon le mode
+  var rowPI=document.getElementById('row-pinstall');
+  if(modeDevis==='non'){rowPI.style.display='none';}
+  else{rowPI.style.display='flex';}
+  if(modeDevis==='oui'){
+    goStep('3a');
+  } else {
+    goStep('3b');
+    calcSurface();
+  }
+}
+
+// ─── ÉTAPE 3B : CALCUL SURFACE ──────────────────────────
+function calcSurface(){
+  var long=parseFloat(document.getElementById('surf-long').value)||0;
+  var haut=parseFloat(document.getElementById('surf-haut').value)||0;
+  if(long<=0||haut<=0){
+    document.getElementById('surf-totale').textContent='';
+    document.getElementById('surf-calc').style.display='none';
+    return;
+  }
+
+  var surf=long*haut;
+  document.getElementById('surf-totale').textContent='📐 Surface totale : '+surf.toFixed(1)+' m²  ('+long+' m × '+haut+' m)';
+
+  // Panneau 500 Wc portrait : 2094mm × 1038mm + joint 20mm
+  var panH=2.094, panW=1.038, gap=0.02;
+
+  // Réserve 15% sur chaque dimension (≈ 28% sur la surface totale)
+  var longUtile = long * 0.85;
+  var hautUtile = haut * 0.85;
+
+  // Nombre de panneaux par rangée (en largeur)
+  var ppr = Math.floor(longUtile / (panW + gap));
+  // Nombre de rangées (en hauteur)
+  var rows = Math.floor(hautUtile / (panH + gap));
+
+  if(ppr < 1) ppr = 0;
+  if(rows < 1) rows = 0;
+
+  // Total = toujours rangées complètes identiques
+  var nbPan = ppr * rows;
+  panneauxAuto = nbPan;
+  pprAuto = ppr;
+  rowsAuto = rows;
+
+  if(nbPan < 1){
+    document.getElementById('sr-nb-pan').textContent='0';
+    document.getElementById('sr-detail').textContent='Surface insuffisante pour intégrer des panneaux 500 Wc.';
+    document.getElementById('sr-kwc-info').innerHTML='⚠️ Toiture trop petite — vérifiez les dimensions.';
+    document.getElementById('surf-calc').style.display='block';
+    return;
+  }
+
+  document.getElementById('sr-nb-pan').textContent=nbPan;
+  document.getElementById('sr-detail').textContent=
+    rows+' rangée'+(rows>1?'s':'')+' × '+ppr+' panneau'+(ppr>1?'x':'')+
+    '  ·  Dim. utiles : '+longUtile.toFixed(2)+' m × '+hautUtile.toFixed(2)+' m (−15% chaque côté)';
+
+  var kwcAuto=(nbPan*500/1000).toFixed(1);
+  document.getElementById('sr-kwc-info').innerHTML=
+    '⚡ Puissance installée estimée : <strong>'+kwcAuto+' kWc</strong> ('+rows+' × '+ppr+' panneaux de 500 Wc)';
+
+  document.getElementById('surf-calc').style.display='block';
+}
+
+function validerSurface(){
+  if(panneauxAuto<1){alert('Surface insuffisante ou saisie invalide.');return;}
+  goStep(4);
+}
+
+// ─── RETOUR depuis étape 4 ───────────────────────────────
+function retourStep4(){
+  if(modeDevis==='non') goStep('3b');
+  else goStep('3a');
+}
+
+// ─── CALCULS PRODUCTION ─────────────────────────────────
+function calcProd(kwc,azF,inF){
+  var base=BASE[getKey()];
+  var annual=Math.round(kwc*base*azF*inF);
+  return{annual:annual,monthly:MF.map(function(f){return Math.round(annual*f)})};
+}
+
+function roiWithInflation(sav,invest){
+  if(sav<=0)return null;
+  var c=0;
+  for(var n=1;n<=50;n++){c+=sav*Math.pow(1.02,n-1);if(c>=invest)return n;}
+  return null;
+}
+
+function savings20(sav){
+  var t=0;
+  for(var i=0;i<20;i++)t+=sav*Math.pow(1.02,i);
+  return Math.round(t);
+}
+
+// ─── CALCUL DIMENSIONS ──────────────────────────────────
+function calcDims(n,wc,orient,ppr){
+  var d=PDIM[wc]||PDIM[500];
+  var ph=orient==='portrait'?d.h:d.w;
+  var pw=orient==='portrait'?d.w:d.h;
+  ppr=Math.max(1,ppr||Math.round(Math.sqrt(n)));
+  // Rangées COMPLÈTES uniquement (floor, pas ceil)
+  var rows=Math.floor(n/ppr);
+  if(rows<1)rows=1;
+  var nEffectif=rows*ppr; // nombre réel de panneaux (multiple de ppr)
+  var gap=20;
+  var tw=ppr*pw+(ppr-1)*gap;
+  var th=rows*ph+(rows-1)*gap;
+  var surf=(nEffectif*ph*pw)/1e6;
+  return{
+    rows:rows,ppr:ppr,
+    n:nEffectif,
+    tw:(tw/1000).toFixed(2),th:(th/1000).toFixed(2),
+    pw:pw,ph:ph,
+    surface:surf.toFixed(1),
+    surfConseil:(surf*1.15).toFixed(1),
+    orientLabel:orient==='portrait'?'↕ Portrait':'↔ Paysage'
+  };
+}
+
+function drawSchemaSvg(d){
+  var ppr=d.ppr,rows=d.rows,gap=3;
+  var panW=Math.min(50,Math.max(10,Math.floor(330/ppr)));
+  var panH=Math.min(68,Math.max(10,Math.round(panW*d.ph/d.pw)));
+  var gridW=ppr*panW+(ppr-1)*gap;
+  var gridH=rows*panH+(rows-1)*gap;
+  var mL=24,mT=14,mR=58,mB=34;
+  var svgW=mL+gridW+mR,svgH=mT+gridH+mB;
+  var s='<svg width="100%" viewBox="0 0 '+svgW+' '+svgH+'" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:10px 0 4px;border-radius:6px;background:#f0f6ff">';
+  for(var r=0;r<rows;r++){for(var c=0;c<ppr;c++){
+    var px=mL+c*(panW+gap),py=mT+r*(panH+gap);
+    s+='<rect x="'+px+'" y="'+py+'" width="'+panW+'" height="'+panH+'" fill="#dbeafe" stroke="#1565C0" stroke-width="1.3" rx="2"/>';
+    if(panH>18){var ly=py+Math.round(panH*0.38);s+='<line x1="'+(px+2)+'" y1="'+ly+'" x2="'+(px+panW-2)+'" y2="'+ly+'" stroke="#93c5fd" stroke-width="0.7"/>';}
+  }}
+  var wy=mT+gridH+11,wx1=mL,wx2=mL+gridW,wmx=Math.round((wx1+wx2)/2);
+  s+='<line x1="'+(wx1+6)+'" y1="'+wy+'" x2="'+(wx2-6)+'" y2="'+wy+'" stroke="#1565C0" stroke-width="1"/>';
+  s+='<polygon points="'+wx1+','+wy+' '+(wx1+7)+','+(wy-3)+' '+(wx1+7)+','+(wy+3)+'" fill="#1565C0"/>';
+  s+='<polygon points="'+wx2+','+wy+' '+(wx2-7)+','+(wy-3)+' '+(wx2-7)+','+(wy+3)+'" fill="#1565C0"/>';
+  s+='<line x1="'+wx1+'" y1="'+(wy-5)+'" x2="'+wx1+'" y2="'+(wy+5)+'" stroke="#1565C0" stroke-width="1"/>';
+  s+='<line x1="'+wx2+'" y1="'+(wy-5)+'" x2="'+wx2+'" y2="'+(wy+5)+'" stroke="#1565C0" stroke-width="1"/>';
+  s+='<text x="'+wmx+'" y="'+(wy+15)+'" text-anchor="middle" font-size="10" font-weight="700" fill="#1565C0" font-family="system-ui,sans-serif">'+d.tw+' m</text>';
+  var hx=mL+gridW+14,hy1=mT,hy2=mT+gridH,hmy=Math.round((hy1+hy2)/2),htx=hx+20;
+  s+='<line x1="'+hx+'" y1="'+(hy1+6)+'" x2="'+hx+'" y2="'+(hy2-6)+'" stroke="#1565C0" stroke-width="1"/>';
+  s+='<polygon points="'+hx+','+hy1+' '+(hx-3)+','+(hy1+7)+' '+(hx+3)+','+(hy1+7)+'" fill="#1565C0"/>';
+  s+='<polygon points="'+hx+','+hy2+' '+(hx-3)+','+(hy2-7)+' '+(hx+3)+','+(hy2-7)+'" fill="#1565C0"/>';
+  s+='<line x1="'+(hx-5)+'" y1="'+hy1+'" x2="'+(hx+5)+'" y2="'+hy1+'" stroke="#1565C0" stroke-width="1"/>';
+  s+='<line x1="'+(hx-5)+'" y1="'+hy2+'" x2="'+(hx+5)+'" y2="'+hy2+'" stroke="#1565C0" stroke-width="1"/>';
+  s+='<text x="'+htx+'" y="'+(hmy+4)+'" text-anchor="middle" font-size="10" font-weight="700" fill="#1565C0" font-family="system-ui,sans-serif" transform="rotate(-90,'+htx+','+hmy+')">'+d.th+' m</text>';
+  s+='</svg>';
+  return s;
+}
+
+function renderDims(label,d){
+  return '<div class="dc">'
+    +'<div class="dc-head"><span class="dc-tag">'+label+'</span><span class="dc-orient">'+d.orientLabel+'</span></div>'
+    +drawSchemaSvg(d)
+    +'<div class="dc-grid">'
+    +'<div class="dc-cell"><div class="dc-lbl">Disposition</div><div class="dc-val">'+d.rows+' × '+d.ppr+'</div><div class="dc-sub">rangées × panneaux</div></div>'
+    +'<div class="dc-cell"><div class="dc-lbl">Largeur hors tout</div><div class="dc-val blue">'+d.tw+' m</div><div class="dc-sub">'+d.ppr+' pan. × '+d.pw+' mm</div></div>'
+    +'<div class="dc-cell"><div class="dc-lbl">Hauteur hors tout</div><div class="dc-val blue">'+d.th+' m</div><div class="dc-sub">'+d.rows+' rang. × '+d.ph+' mm</div></div>'
+    +'<div class="dc-cell"><div class="dc-lbl">Surface active</div><div class="dc-val">'+d.surface+' m²</div><div class="dc-sub">+15% marges → '+d.surfConseil+' m²</div></div>'
+    +'</div></div>';
+}
+
+// ─── CALCUL PRINCIPAL ────────────────────────────────────
+function calculate(){
+  goStep(5);
+
+  var p1, kwc1, r1, kwc2=0, r2={annual:0,monthly:new Array(12).fill(0)};
+  var hasToit2=false, p2=0;
+  var ppr1, d1, dimsHtml='';
+
+  if(modeDevis==='non'){
+    // ─── Chemin NON : panneaux calculés depuis surface
+    p1=panneauxAuto;
+    kwc1=Math.round(p1*500/100)/10;
+    r1=calcProd(kwc1,S['az_non'],S['in_non']); // orientation choisie par l'utilisateur
+    d1=calcDims(p1,500,'portrait',pprAuto);
+    dimsHtml=renderDims('Toit 1 (surface)',d1);
+    // Masquer ROI et gain net
+    document.getElementById('r-roi-card').style.display='none';
+    document.getElementById('r-gain20-card').style.display='none';
+    document.getElementById('r-note-non').style.display='block';
+  } else {
+    // ─── Chemin OUI : config toiture manuelle
+    document.getElementById('r-roi-card').style.display='';
+    document.getElementById('r-gain20-card').style.display='';
+    document.getElementById('r-note-non').style.display='none';
+    p1=parseInt(document.getElementById('pan1').value)||12;
+    var ppr1=parseInt(document.getElementById('ppr1').value)||4;
+    d1=calcDims(p1,S['w1'],S['or1'],ppr1);
+    p1=d1.n; // ajusté aux rangées complètes
+    kwc1=Math.round(p1*S['w1']/100)/10;
+    r1=calcProd(kwc1,S['az1'],S['in1']);
+    hasToit2=document.getElementById('t2tog').checked;
+    if(hasToit2){
+      p2=parseInt(document.getElementById('pan2').value)||6;
+      var ppr2=parseInt(document.getElementById('ppr2').value)||3;
+      var d2=calcDims(p2,S['w2'],S['or2'],ppr2);
+      p2=d2.n; // ajusté aux rangées complètes
+      kwc2=Math.round(p2*S['w2']/100)/10;
+      r2=calcProd(kwc2,S['az2'],S['in2']);
+    }
+    dimsHtml=renderDims('Toit 1',d1);
+    if(hasToit2&&p2>0){
+      dimsHtml+=renderDims('Toit 2',d2);
+      var surfTot=(parseFloat(d1.surface)+parseFloat(d2.surface)).toFixed(1);
+      var surfConseilTot=(parseFloat(d1.surfConseil)+parseFloat(d2.surfConseil)).toFixed(1);
+      dimsHtml+='<div class="dc-total">Surface active totale : <strong>'+surfTot+' m²</strong> &nbsp;·&nbsp; Surface conseillée : <strong>'+surfConseilTot+' m²</strong></div>';
+    }
+  }
+
+  var kwcT=Math.round((kwc1+kwc2)*10)/10;
+  var aT=r1.annual+r2.annual;
+  var mT=r1.monthly.map(function(v,i){return v+r2.monthly[i]});
+  var pKwh=parseFloat(document.getElementById('pkwh').value)||0.25;
+  var pInst=parseFloat(document.getElementById('pinstall').value)||9000;
+  var autoKwh=Math.round(aT*0.60);
+  var sav1=Math.round(autoKwh*pKwh);
+  var co2=Math.round(aT*0.06);
+  var roi=roiWithInflation(sav1,pInst);
+  var eco20=savings20(sav1);
+  var gain20=eco20-pInst;
+
+  document.getElementById('r-prod').textContent=aT.toLocaleString('fr-FR');
+  document.getElementById('r-kwc').textContent=kwcT.toFixed(1)+' kWc';
+  document.getElementById('r-co2').textContent=co2.toLocaleString('fr-FR')+' kg';
+  document.getElementById('r-eco').textContent=sav1.toLocaleString('fr-FR')+' €';
+  document.getElementById('r-roi').textContent=roi?roi+' ans':'> 50 ans';
+  document.getElementById('r-eco20').textContent=eco20.toLocaleString('fr-FR')+' €';
+  document.getElementById('r-gain20').textContent=(gain20>0?'+':'')+gain20.toLocaleString('fr-FR')+' €';
+  document.getElementById('r-gain20').style.color=gain20>0?'#16a34a':'#dc2626';
+
+  dimsHtml+='<div class="dc-note">Dimensions indicatives basées sur des panneaux standards : 400 Wc 1 722×1 134 mm · 500 Wc 2 094×1 038 mm · 600 Wc 2 278×1 134 mm. Joint de pose de 20 mm entre panneaux inclus.</div>';
+  document.getElementById('dims-r').innerHTML=dimsHtml;
+
+  var months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  if(chart)chart.destroy();
+  chart=new Chart(document.getElementById('prodChart'),{type:'bar',data:{labels:months,datasets:[{label:'Production (kWh)',data:mT,backgroundColor:'#1565C0',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return v+' kWh'}}},x:{ticks:{autoSkip:false,maxRotation:0}}}}});
+  document.getElementById('results').style.display='block';
+}
+
+// ─── RESET ───────────────────────────────────────────────
+function reset(){
+  document.getElementById('dept').value='';
+  document.getElementById('dname').textContent='';
+  modeDevis=null;
+  panneauxAuto=0;
+  document.getElementById('btn-oui').classList.remove('on');
+  document.getElementById('btn-non').classList.remove('on');
+  document.getElementById('btn-step2-next').style.display='none';
+  document.getElementById('surf-calc').style.display='none';
+  goStep(1);
+}
+</script>
+</body>
+</html>
